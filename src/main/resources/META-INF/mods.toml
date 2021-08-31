@@ -1,0 +1,29 @@
+modLoader="javafml"
+loaderVersion="[36,)"
+license="All rights reserved"
+
+[[mods]]
+modId="spawner_head"
+version="${file.jarVersion}"
+displayName="Spawner Head"
+logoFile="examplemod.png"
+credits="E"
+authors="orderedchaosdev"
+description='''
+	Spawner Heads!
+'''
+
+[[dependencies.spawner_head]]
+    modId="forge"
+    mandatory=true
+    versionRange="[36,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.spawner_head]]
+    modId="minecraft"
+    mandatory=true
+
+    versionRange="[1.16.5]"
+    ordering="NONE"
+    side="BOTH"
