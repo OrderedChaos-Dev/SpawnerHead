@@ -3,7 +3,7 @@ loaderVersion="[36,)"
 license="All rights reserved"
 
 [[mods]]
-modId="spawner_head"
+modId="spawnerhead"
 version="${file.jarVersion}"
 displayName="Spawner Head"
 logoFile="examplemod.png"
@@ -13,14 +13,14 @@ description='''
 	Spawner Heads!
 '''
 
-[[dependencies.spawner_head]]
+[[dependencies.spawnerhead]]
     modId="forge"
     mandatory=true
     versionRange="[36,)"
     ordering="NONE"
     side="BOTH"
 
-[[dependencies.spawner_head]]
+[[dependencies.spawnerhead]]
     modId="minecraft"
     mandatory=true
 
