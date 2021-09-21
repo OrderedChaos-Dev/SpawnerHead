@@ -25,6 +25,7 @@ import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.ai.goal.RestrictSunGoal;
 import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
 import net.minecraft.entity.monster.AbstractSkeletonEntity;
+import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.entity.passive.TurtleEntity;
@@ -37,6 +38,7 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.IndirectEntityDamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
@@ -58,6 +60,7 @@ public class SpawnerHeadEntity extends MonsterEntity {
 	private static final DataParameter<Integer> BODY_TYPE = EntityDataManager.defineId(SpawnerHeadEntity.class, DataSerializers.INT);
 	
 	private AbstractSpawner spawner = new AbstractSpawner() {
+		
 		@Override
 		public void broadcastEvent(int i) {
 			SpawnerHeadEntity.this.level.broadcastEntityEvent(SpawnerHeadEntity.this, (byte) i);
@@ -74,7 +77,7 @@ public class SpawnerHeadEntity extends MonsterEntity {
 		}
 
 		@Override
-		@javax.annotation.Nullable
+		@Nullable
 		public Entity getSpawnerEntity() {
 			return SpawnerHeadEntity.this;
 		}
@@ -147,7 +150,10 @@ public class SpawnerHeadEntity extends MonsterEntity {
 		//this is because the spawner display entity cannot be changed once it is set during the game instance
 		//and for some reason the display entity is set before anything else, so it always default to pig
 		if(!this.level.isClientSide && !this.isSpawnerMobSet()) {
-			EntityType<?> type = SpawnerHeadSpawns.SPAWN_POTENTIALS.getOne(this.getRandom());
+			EntityType<?> type = EntityType.ZOMBIE;
+			if(!SpawnerHeadSpawns.SPAWN_POTENTIALS.isEmpty()) {
+				type = SpawnerHeadSpawns.SPAWN_POTENTIALS.getOne(this.getRandom());
+			}
 			this.spawner.setEntityId(type);
 			this.setSpawnerMobFlag(true);
 			this.entityData.set(SPAWNER_ENTITY_ID, type.getRegistryName().toString());
@@ -189,6 +195,14 @@ public class SpawnerHeadEntity extends MonsterEntity {
 			if(source.isProjectile() && source instanceof IndirectEntityDamageSource) {
 				Entity owner = ((IndirectEntityDamageSource) source).getEntity();
 				if(owner != null && owner instanceof AbstractSkeletonEntity) {
+					return true;
+				}
+			}
+		}
+		if(SpawnerHeadConfig.immuneToCreeperExplosions.get()) {
+			if(source.isExplosion() && source instanceof EntityDamageSource) {
+				Entity owner = ((EntityDamageSource) source).getEntity();
+				if(owner != null && owner instanceof CreeperEntity) {
 					return true;
 				}
 			}

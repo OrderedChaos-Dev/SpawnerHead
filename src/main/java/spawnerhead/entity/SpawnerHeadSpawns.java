@@ -31,7 +31,7 @@ public class SpawnerHeadSpawns {
 			}
 		});
 		if(list.size() == 0) {
-			SpawnerHead.LOGGER.error("Error: empty list in config");
+			SpawnerHead.LOGGER.error("Error: empty list in config. Defaulting to zombie.");
 		}
 	}
 }

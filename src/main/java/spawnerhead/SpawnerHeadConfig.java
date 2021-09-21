@@ -20,6 +20,7 @@ public class SpawnerHeadConfig {
 	public static ForgeConfigSpec.ConfigValue<Integer> spawnRate;
 	public static ForgeConfigSpec.ConfigValue<Boolean> burnsInSunlight;
 	public static ForgeConfigSpec.ConfigValue<Boolean> immuneToSkeletonArrows;
+	public static ForgeConfigSpec.ConfigValue<Boolean> immuneToCreeperExplosions;
 	public static ForgeConfigSpec.ConfigValue<Boolean> canBeLeashed;
 	public static ForgeConfigSpec.ConfigValue<Boolean> dropSpecialLoot;
 	public static ConfigValue<List<? extends String>> potentialSpawnerMobs;
@@ -38,6 +39,7 @@ public class SpawnerHeadConfig {
 		spawnRate = COMMON_BUILDER.comment("Average Spawn Rate (example: '75' means 1 in 75 zombies will be a spawner head)").defineInRange("Spawn Rate", 50, 1, 100000);
 		burnsInSunlight = COMMON_BUILDER.comment("Set spawner head mobs to burn in sunlight like regular undead").define("Burns In Sunlight", true);
 		immuneToSkeletonArrows = COMMON_BUILDER.comment("Make spawner heads immune to skeleton arrows").define("Skeleton Arrow Immunity", false);
+		immuneToCreeperExplosions = COMMON_BUILDER.comment("Make spawner heads immune to creeper explosions").define("Creeper Explosion Immunity", false);
 		canBeLeashed = COMMON_BUILDER.comment("Allow players to use lead items on spawner heads").define("Can be leashed", false);
 		dropSpecialLoot = COMMON_BUILDER.comment("Spawner heads loot will be based off their mob spawner entity. Setting to false will have them drop zombie loot").define("Drop Special Loot", true);
 		COMMON_BUILDER.push("Spawner Head Potential Spawns Settings");
