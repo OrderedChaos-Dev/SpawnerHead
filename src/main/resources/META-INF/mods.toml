@@ -1,0 +1,16 @@
+modLoader="javafml" #mandatory
+loaderVersion="[39,)" #mandatory
+license="All rights reserved"
+issueTrackerURL="https://github.com/OrderedChaos-Dev/SpawnerHead/issues" #optional
+
+[[mods]] #mandatory
+modId="spawnerhead" #mandatory
+version="${file.jarVersion}" #mandatory
+displayName="Spawner Head" #mandatory
+displayURL="https://www.ordered-chaos.dev/" #optional
+logoFile="examplemod.png" #optional
+credits="" #optional
+authors="OrderedChaosDev" #optional
+description='''
+Adds mobile dungeon mob
+'''
