@@ -10,6 +10,6 @@ public class EntityRendering {
 	
 	@OnlyIn(Dist.CLIENT)
 	public static void registerRenderers() {
-		EntityRenderers.register(EntityInit.SPAWNER_HEAD, SpawnerHeadRenderer::new);
+		EntityRenderers.register(EntityInit.SPAWNER_HEAD.get(), SpawnerHeadRenderer::new);
 	}
 }

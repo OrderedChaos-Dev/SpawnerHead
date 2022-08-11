@@ -1,7 +1,5 @@
 package com.spawnerhead.client;
 
-import java.util.Optional;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
 import com.spawnerhead.entity.SpawnerHeadEntity;
@@ -15,7 +13,6 @@ import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -36,12 +33,12 @@ public class SpawnerHeadRenderer extends HumanoidMobRenderer<SpawnerHeadEntity, 
    
    @Override
    public void render(SpawnerHeadEntity entity, float rotation, float delta, PoseStack stack, MultiBufferSource buffer, int light) {
+		super.render(entity, rotation, delta, stack, buffer, light);
 		stack.pushPose();
 		stack.translate(0.0D, entity.getEyeHeight() - 0.4, 0.0D);
 		BaseSpawner spawner = entity.getSpawner();
 		Entity modelEntity = spawner.getOrCreateDisplayEntity(entity.getLevel());
-		Optional<EntityType<?>> entityType = EntityType.byString(entity.getEntityData().get(SpawnerHeadEntity.SPAWNER_ENTITY_ID));
-//		Entity modelEntity = EntityType.create(15, entity.getLevel());
+
 		if (modelEntity != null) {
 			float f = 0.4F;
 			float f1 = Math.max(modelEntity.getBbWidth(), modelEntity.getBbHeight());
@@ -58,6 +55,5 @@ public class SpawnerHeadRenderer extends HumanoidMobRenderer<SpawnerHeadEntity, 
 		}
 
 		stack.popPose();
-		super.render(entity, rotation, delta, stack, buffer, light);
    }
 }

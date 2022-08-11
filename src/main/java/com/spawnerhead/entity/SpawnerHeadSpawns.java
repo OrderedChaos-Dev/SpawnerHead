@@ -22,11 +22,11 @@ public class SpawnerHeadSpawns {
 	public static SimpleWeightedRandomList<EntityType<?>> SPAWN_POTENTIALS = null;
 	
 	public static final List<SpawnPotentialsData> SPAWN_POTENTIAL_DEFAULTS = List.of(
-																		new SpawnPotentialsData("minecraft:zombie", 100),
-																		new SpawnPotentialsData("minecraft:spider", 100),
-																		new SpawnPotentialsData("minecraft:skeleton", 50),
-																		new SpawnPotentialsData("minecraft:husk", 75),
-																		new SpawnPotentialsData("minecraft:stray", 50));
+										new SpawnPotentialsData("minecraft:zombie", 100),
+										new SpawnPotentialsData("minecraft:spider", 100),
+										new SpawnPotentialsData("minecraft:skeleton", 50),
+										new SpawnPotentialsData("minecraft:husk", 75),
+										new SpawnPotentialsData("minecraft:stray", 50));
 	
 	public static void initSpawnList() {		
 		Path path = FMLPaths.CONFIGDIR.get().resolve("spawnerhead/spawn_potentials.json");
@@ -64,7 +64,7 @@ public class SpawnerHeadSpawns {
 			spawnPotentialMap.forEach((a, b) -> {
 				Optional<EntityType<?>> entity = EntityType.byString(a);
 				if(entity.isPresent()) {
-					System.out.println(a + " " + b);
+					SpawnerHead.LOGGER.debug("Adding [{} with weight {} to spawner header spawn potentials pool]", a, b);
 					builder.add(entity.get(), b);
 				} else {
 					SpawnerHead.LOGGER.warn("Entity type for spawner head not found: {}", a);

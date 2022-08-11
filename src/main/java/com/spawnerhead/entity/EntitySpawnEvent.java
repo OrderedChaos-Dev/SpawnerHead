@@ -21,7 +21,7 @@ public class EntitySpawnEvent {
 			if(event.getResult() != Result.DENY && event.getSpawnReason() == MobSpawnType.NATURAL) {
 				int rate = SpawnerHeadConfig.spawnRate.get();
 				if(event.getWorld().getRandom().nextInt(rate) == 0) {
-					SpawnerHeadEntity spawner = EntityInit.SPAWNER_HEAD.create(event.getEntityLiving().level);
+					SpawnerHeadEntity spawner = EntityInit.SPAWNER_HEAD.get().create(event.getEntityLiving().level);
 					spawner.copyPosition(entity);
 					
 					if(event.getWorld() instanceof ServerLevelAccessor)

@@ -1,11 +1,9 @@
 package com.spawnerhead.entity;
 
+import java.lang.reflect.Field;
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.annotation.Nullable;
-
-import org.apache.commons.lang3.reflect.FieldUtils;
 
 import com.spawnerhead.ItemInit;
 import com.spawnerhead.SpawnerHeadConfig;
@@ -60,7 +58,6 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.SpawnData;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
@@ -101,6 +98,16 @@ public class SpawnerHeadEntity extends Monster {
 					}
 
 					displayEntity = super.getOrCreateDisplayEntity(level);
+				}
+			} else if(displayEntity.getType() != EntityType.byString(entityData.get(SPAWNER_ENTITY_ID)).get()) {
+				try {
+					Field field = this.getClass().getSuperclass().getDeclaredField("displayEntity");
+					field.setAccessible(true);
+					field.set(this, null);
+					this.setEntityId(EntityType.byString(entityData.get(SPAWNER_ENTITY_ID)).get());
+					displayEntity = super.getOrCreateDisplayEntity(level);
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 
@@ -256,6 +263,7 @@ public class SpawnerHeadEntity extends Monster {
 		this.entityData.set(SPAWNER_ENTITY_ID, type.getRegistryName().toString());
 		this.spawner.setEntityId(type);
 		
+		
 		if(reason == MobSpawnType.SPAWN_EGG) {
 			this.setSpawnerHeadType(random.nextInt(2));
 		}
@@ -263,26 +271,29 @@ public class SpawnerHeadEntity extends Monster {
 		return data;
 	}
 	
-//	@Override
-//	public InteractionResult mobInteract(Player player, InteractionHand hand) {
-//		ItemStack stack = player.getItemInHand(hand);
-//		Item item = stack.getItem();
-//		if(item instanceof SpawnEggItem && item != ItemInit.spawnerhead_spawn_egg) {
-//			//TODO: make configurable blacklist
-//			EntityType<?> entity = ((SpawnEggItem)item).getType(null);
-//			if(!this.level.isClientSide) {
-//				this.entityData.set(SPAWNER_ENTITY_ID, entity.getRegistryName().toString());
-//				this.spawner.setEntityId(entity);
-//			}
-//			displayEntity = null;
-//			
-//			if(!player.isCreative())
-//				stack.shrink(1);
-//			return InteractionResult.SUCCESS;
-//		}
-//		
-//		return super.mobInteract(lastHurtByPlayer, hand);
-//	}
+	@Override
+	public InteractionResult mobInteract(Player player, InteractionHand hand) {
+		ItemStack stack = player.getItemInHand(hand);
+		Item item = stack.getItem();
+		if(item instanceof SpawnEggItem && item != ItemInit.spawnerhead_spawn_egg.get()) {
+			//TODO: make configurable blacklist
+			EntityType<?> entity = ((SpawnEggItem)item).getType(null);
+			if(!this.level.isClientSide) {
+				this.entityData.set(SPAWNER_ENTITY_ID, entity.getRegistryName().toString());
+				this.spawner.setEntityId(entity);
+			}
+			
+			if(!player.isCreative())
+				stack.shrink(1);
+			
+			displayEntity = null;
+			
+
+			return InteractionResult.SUCCESS;
+		}
+		
+		return super.mobInteract(lastHurtByPlayer, hand);
+	}
 	
 	@Override
 	protected float getStandingEyeHeight(Pose pose, EntityDimensions size) {
