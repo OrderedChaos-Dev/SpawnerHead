@@ -88,6 +88,7 @@ public class SpawnerHeadEntity extends Monster {
 		@Override
 		@Nullable
 		public Entity getOrCreateDisplayEntity(Level level) {
+
 			if (displayEntity == null) {
 
 				Optional<EntityType<?>> type = EntityType.byString(entityData.get(SPAWNER_ENTITY_ID));
@@ -100,15 +101,9 @@ public class SpawnerHeadEntity extends Monster {
 					displayEntity = super.getOrCreateDisplayEntity(level);
 				}
 			} else if(displayEntity.getType() != EntityType.byString(entityData.get(SPAWNER_ENTITY_ID)).get()) {
-				try {
-					Field field = this.getClass().getSuperclass().getDeclaredField("displayEntity");
-					field.setAccessible(true);
-					field.set(this, null);
-					this.setEntityId(EntityType.byString(entityData.get(SPAWNER_ENTITY_ID)).get());
-					displayEntity = super.getOrCreateDisplayEntity(level);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				this.displayEntity = null;
+				this.setEntityId(EntityType.byString(entityData.get(SPAWNER_ENTITY_ID)).get());
+				displayEntity = super.getOrCreateDisplayEntity(level);
 			}
 
 			return displayEntity;
