@@ -268,23 +268,25 @@ public class SpawnerHeadEntity extends Monster {
 	
 	@Override
 	public InteractionResult mobInteract(Player player, InteractionHand hand) {
-		ItemStack stack = player.getItemInHand(hand);
-		Item item = stack.getItem();
-		if(item instanceof SpawnEggItem && item != ItemInit.spawnerhead_spawn_egg.get()) {
-			//TODO: make configurable blacklist
-			EntityType<?> entity = ((SpawnEggItem)item).getType(null);
-			if(!this.level.isClientSide) {
-				this.entityData.set(SPAWNER_ENTITY_ID, entity.getRegistryName().toString());
-				this.spawner.setEntityId(entity);
-			}
-			
-			if(!player.isCreative())
-				stack.shrink(1);
-			
-			displayEntity = null;
-			
+		if(SpawnerHeadConfig.allowSpawnEggUse.get()) {
+			ItemStack stack = player.getItemInHand(hand);
+			Item item = stack.getItem();
+			if(item instanceof SpawnEggItem && item != ItemInit.spawnerhead_spawn_egg.get()) {
+				//TODO: make configurable blacklist
+				EntityType<?> entity = ((SpawnEggItem)item).getType(null);
+				if(!this.level.isClientSide) {
+					this.entityData.set(SPAWNER_ENTITY_ID, entity.getRegistryName().toString());
+					this.spawner.setEntityId(entity);
+				}
+				
+				if(!player.isCreative())
+					stack.shrink(1);
+				
+				displayEntity = null;
+				
 
-			return InteractionResult.SUCCESS;
+				return InteractionResult.SUCCESS;
+			}
 		}
 		
 		return super.mobInteract(lastHurtByPlayer, hand);

@@ -16,6 +16,7 @@ public class SpawnerHeadConfig {
 	public static ForgeConfigSpec.ConfigValue<Boolean> immuneToCreeperExplosions;
 	public static ForgeConfigSpec.ConfigValue<Boolean> canBeLeashed;
 	public static ForgeConfigSpec.ConfigValue<Boolean> dropSpecialLoot;
+	public static ForgeConfigSpec.ConfigValue<Boolean> allowSpawnEggUse;
 	public static ConfigValue<List<? extends String>> potentialSpawnerMobs;
 	
 	static {
@@ -26,6 +27,7 @@ public class SpawnerHeadConfig {
 		immuneToCreeperExplosions = COMMON_BUILDER.comment("Make spawner heads immune to creeper explosions").define("Creeper Explosion Immunity", false);
 		canBeLeashed = COMMON_BUILDER.comment("Allow players to use lead items on spawner heads").define("Can Be Leashed", false);
 		dropSpecialLoot = COMMON_BUILDER.comment("Make spawner heads drop dungeon loot on death. Drops zombie loot when set to false.").define("Drop Special Loot", true);
+		allowSpawnEggUse = COMMON_BUILDER.comment("Allow players to use spawn eggs to modify the spawner mob").define("Allow Spawn Egg Use", true);
 		COMMON_BUILDER.pop();
 		
 		COMMON_CONFIG = COMMON_BUILDER.build();
