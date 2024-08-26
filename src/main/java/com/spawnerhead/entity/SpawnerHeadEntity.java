@@ -1,13 +1,7 @@
 package com.spawnerhead.entity;
 
-import java.lang.reflect.Field;
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-
 import com.spawnerhead.ItemInit;
 import com.spawnerhead.SpawnerHeadConfig;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -17,29 +11,17 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.EntityDamageSource;
-import net.minecraft.world.damagesource.IndirectEntityDamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityDimensions;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.MobType;
-import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FleeSunGoal;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.RestrictSunGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.IronGolem;
@@ -63,8 +45,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.registries.ForgeRegistries;
 
-//TODO: allow changing of spawner entity with spawn eggs
+import javax.annotation.Nullable;
+import java.util.Optional;
+
 public class SpawnerHeadEntity extends Monster {
 	
 	public static final EntityDataAccessor<String> SPAWNER_ENTITY_ID = SynchedEntityData.defineId(SpawnerHeadEntity.class, EntityDataSerializers.STRING);
@@ -87,7 +72,7 @@ public class SpawnerHeadEntity extends Monster {
 		
 		@Override
 		@Nullable
-		public Entity getOrCreateDisplayEntity(Level level) {
+		public Entity getOrCreateDisplayEntity(Level level, RandomSource random, BlockPos pos) {
 
 			if (displayEntity == null) {
 
@@ -95,15 +80,15 @@ public class SpawnerHeadEntity extends Monster {
 				//sync entity with basespawner on client
 				if(type.isPresent()) {
 					if(level.isClientSide) {
-						this.setEntityId(type.get());
+						this.setEntityId(type.get(), level, random, pos);
 					}
 
-					displayEntity = super.getOrCreateDisplayEntity(level);
+					displayEntity = super.getOrCreateDisplayEntity(level, random, pos);
 				}
 			} else if(displayEntity.getType() != EntityType.byString(entityData.get(SPAWNER_ENTITY_ID)).get()) {
 				this.displayEntity = null;
-				this.setEntityId(EntityType.byString(entityData.get(SPAWNER_ENTITY_ID)).get());
-				displayEntity = super.getOrCreateDisplayEntity(level);
+				this.setEntityId(EntityType.byString(entityData.get(SPAWNER_ENTITY_ID)).get(), level, random, pos);
+				displayEntity = super.getOrCreateDisplayEntity(level, random, pos);
 			}
 
 			return displayEntity;
@@ -150,10 +135,10 @@ public class SpawnerHeadEntity extends Monster {
 		super.readAdditionalSaveData(nbt);
 		this.entityData.set(SPAWNER_ENTITY_ID, nbt.getString("spawner_entity_id"));
 		this.entityData.set(BODY_TYPE, nbt.getInt("type"));
-		this.spawner.load(this.level, this.blockPosition(), nbt);
+		this.spawner.load(this.level(), this.blockPosition(), nbt);
 		Optional<EntityType<?>> type = EntityType.byString(this.entityData.get(SPAWNER_ENTITY_ID));
 		if(type.isPresent()) {
-			this.spawner.setEntityId(type.get());
+			this.spawner.setEntityId(type.get(), this.level(), this.random, this.blockPosition());
 		}
 	}
 
@@ -168,7 +153,7 @@ public class SpawnerHeadEntity extends Monster {
 	@Override
 	@OnlyIn(Dist.CLIENT)
 	public void handleEntityEvent(byte b) {
-		this.spawner.onEventTriggered(this.level, b);
+		this.spawner.onEventTriggered(this.level(), b);
 	}
 	
 	@Override
@@ -191,27 +176,27 @@ public class SpawnerHeadEntity extends Monster {
 	@Override
 	public void tick() {
 		super.tick();
-		if(this.level.isClientSide) {
-			this.spawner.clientTick(this.level, this.getSpawnerPos());
+		if(this.level().isClientSide) {
+			this.spawner.clientTick(this.level(), this.getSpawnerPos());
 		} else {
-			this.spawner.serverTick((ServerLevel) this.level, this.getSpawnerPos());
+			this.spawner.serverTick((ServerLevel) this.level(), this.getSpawnerPos());
 		}
 	}
 	
 	@Override
 	public boolean isInvulnerableTo(DamageSource source) {
 		if(SpawnerHeadConfig.immuneToSkeletonArrows.get()) {
-			if(source.isProjectile() && source instanceof IndirectEntityDamageSource) {
-				Entity owner = ((IndirectEntityDamageSource) source).getEntity();
-				if(owner != null && owner instanceof AbstractSkeleton) {
+			if (source.is(DamageTypes.ARROW))  {
+				Entity sourceEntity = source.getEntity();
+				if (sourceEntity != null && sourceEntity instanceof AbstractSkeleton) {
 					return true;
 				}
 			}
 		}
 		if(SpawnerHeadConfig.immuneToCreeperExplosions.get()) {
-			if(source.isExplosion() && source instanceof EntityDamageSource) {
-				Entity owner = ((EntityDamageSource) source).getEntity();
-				if(owner != null && owner instanceof Creeper) {
+			if (source.is(DamageTypes.EXPLOSION)) {
+				Entity sourceEntity = source.getEntity();
+				if (sourceEntity != null && sourceEntity instanceof Creeper) {
 					return true;
 				}
 			}
@@ -229,9 +214,9 @@ public class SpawnerHeadEntity extends Monster {
 	}
 	
 	@Override
-	protected void populateDefaultEquipmentSlots(DifficultyInstance difficulty) {
-		super.populateDefaultEquipmentSlots(difficulty);
-		if (this.random.nextFloat() < (this.level.getDifficulty() == Difficulty.HARD ? 0.05F : 0.01F)) {
+	protected void populateDefaultEquipmentSlots(RandomSource randomSource, DifficultyInstance difficulty) {
+		super.populateDefaultEquipmentSlots(randomSource, difficulty);
+		if (this.random.nextFloat() < (this.level().getDifficulty() == Difficulty.HARD ? 0.05F : 0.01F)) {
 			int i = this.random.nextInt(3);
 			if (i == 0) {
 				this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
@@ -245,8 +230,8 @@ public class SpawnerHeadEntity extends Monster {
 	@Override
 	public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType reason, @Nullable SpawnGroupData data, @Nullable CompoundTag nbt) {
 		data = super.finalizeSpawn(world, difficulty, reason, data, nbt);
-		this.populateDefaultEquipmentSlots(difficulty);
-		this.populateDefaultEquipmentEnchantments(difficulty);
+		this.populateDefaultEquipmentSlots(this.random, difficulty);
+		this.populateDefaultEquipmentEnchantments(this.random, difficulty);
 		this.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Blocks.SPAWNER));
 		this.getItemBySlot(EquipmentSlot.HEAD).enchant(Enchantments.ALL_DAMAGE_PROTECTION, this.getRandom().nextInt(3) + 1);
 		this.setDropChance(EquipmentSlot.HEAD, 0.0F);
@@ -255,8 +240,8 @@ public class SpawnerHeadEntity extends Monster {
 		if(!SpawnerHeadSpawns.SPAWN_POTENTIALS.isEmpty()) {
 			type = SpawnerHeadSpawns.SPAWN_POTENTIALS.getRandom(this.getRandom()).get().getData();
 		}
-		this.entityData.set(SPAWNER_ENTITY_ID, type.getRegistryName().toString());
-		this.spawner.setEntityId(type);
+		this.entityData.set(SPAWNER_ENTITY_ID, ForgeRegistries.ENTITY_TYPES.getKey(type).toString());
+		this.spawner.setEntityId(type, world.getLevel(), this.random, this.blockPosition());
 		
 		
 		if(reason == MobSpawnType.SPAWN_EGG) {
@@ -274,9 +259,9 @@ public class SpawnerHeadEntity extends Monster {
 			if(item instanceof SpawnEggItem && item != ItemInit.spawnerhead_spawn_egg.get()) {
 				//TODO: make configurable blacklist
 				EntityType<?> entity = ((SpawnEggItem)item).getType(null);
-				if(!this.level.isClientSide) {
-					this.entityData.set(SPAWNER_ENTITY_ID, entity.getRegistryName().toString());
-					this.spawner.setEntityId(entity);
+				if(!this.level().isClientSide) {
+					this.entityData.set(SPAWNER_ENTITY_ID, ForgeRegistries.ENTITY_TYPES.getKey(entity).toString());
+					this.spawner.setEntityId(entity, this.level(), this.random, this.blockPosition());
 				}
 				
 				if(!player.isCreative())
@@ -298,7 +283,7 @@ public class SpawnerHeadEntity extends Monster {
 	}
 	
 	@Override
-	protected int getExperienceReward(Player player) {
+	public int getExperienceReward() {
 		return 75 + this.getRandom().nextInt(30) + this.getRandom().nextInt(30);
 	}
 	
@@ -319,13 +304,6 @@ public class SpawnerHeadEntity extends Monster {
 	@Override
 	protected ResourceLocation getDefaultLootTable() {
 		if(SpawnerHeadConfig.dropSpecialLoot.get()) {
-//			Optional<EntityType<?>> entity = EntityType.byString(this.entityData.get(SPAWNER_ENTITY_ID));
-//			
-//			if(entity.isPresent()) {
-//				return entity.get().getDefaultLootTable();
-//			}
-//		} else {
-//			return EntityType.ZOMBIE.getDefaultLootTable();
 			return BuiltInLootTables.SIMPLE_DUNGEON;
 		}
 

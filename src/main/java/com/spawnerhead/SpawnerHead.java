@@ -27,9 +27,9 @@ public class SpawnerHead
     	bus.addListener(this::setup);
     	bus.addListener(this::doClientStuff);
         
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SpawnerHeadConfig.COMMON_CONFIG);
-        EntityInit.REGISTER.register(bus);
-        ItemInit.REGISTER.register(bus);
+      ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SpawnerHeadConfig.COMMON_CONFIG);
+      EntityInit.REGISTER.register(bus);
+      ItemInit.REGISTER.register(bus);
     }
 
     private void setup(final FMLCommonSetupEvent event){

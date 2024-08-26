@@ -12,9 +12,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.spawnerhead.SpawnerHead;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.util.random.SimpleWeightedRandomList;
 import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class SpawnerHeadSpawns {
 
@@ -58,7 +60,7 @@ public class SpawnerHeadSpawns {
 			
 			if(spawnPotentialMap.isEmpty()) {
 				SpawnerHead.LOGGER.error("No spawn potentials for spawner heads! Adding zombie to prevent issues.");
-				spawnPotentialMap.put(EntityType.ZOMBIE.getRegistryName().toString(), 100);
+				spawnPotentialMap.put(ForgeRegistries.ENTITY_TYPES.getKey(EntityType.ZOMBIE).toString(), 100);
 			}
 			
 			spawnPotentialMap.forEach((a, b) -> {
