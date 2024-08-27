@@ -17,7 +17,7 @@ public class ItemInit {
 	
 	public static final DeferredRegister<Item> REGISTER = DeferredRegister.create(ForgeRegistries.ITEMS, SpawnerHead.MOD_ID);
 
-	public static RegistryObject<Item> spawnerhead_spawn_egg = REGISTER.register("spawner_head_spawn_egg", () -> createSpawnEgg(EntityInit.SPAWNER_HEAD, 0x302840, 0x267353));
+	public static final RegistryObject<Item> SPAWNER_HEAD_SPAWN_EGG = REGISTER.register("spawner_head_spawn_egg", () -> createSpawnEgg(EntityInit.SPAWNER_HEAD, 0x302840, 0x267353));
 	
 	public static Item createSpawnEgg(Supplier<? extends EntityType<? extends Mob>> entity, int color1, int color2) {
 		return new ForgeSpawnEggItem(entity, color1, color2, new Item.Properties());

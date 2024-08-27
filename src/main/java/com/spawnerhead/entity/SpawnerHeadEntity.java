@@ -50,56 +50,19 @@ import net.minecraftforge.registries.ForgeRegistries;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
-public class SpawnerHeadEntity extends Monster {
-	
+public class SpawnerHeadEntity extends Monster implements PowerableMob {
 	public static final EntityDataAccessor<String> SPAWNER_ENTITY_ID = SynchedEntityData.defineId(SpawnerHeadEntity.class, EntityDataSerializers.STRING);
 	public static final EntityDataAccessor<Integer> BODY_TYPE = SynchedEntityData.defineId(SpawnerHeadEntity.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<Boolean> IS_CHARGED = SynchedEntityData.defineId(SpawnerHeadEntity.class, EntityDataSerializers.BOOLEAN);
 	
-	private Entity displayEntity = null;
-	
-	private BaseSpawner spawner = new BaseSpawner() {
-		
-		@Override
-		public void broadcastEvent(Level level, BlockPos pos, int i) {
-			level.broadcastEntityEvent(SpawnerHeadEntity.this, (byte) i);
-		}
-
-		@Override
-		@Nullable
-		public Entity getSpawnerEntity() {
-			return SpawnerHeadEntity.this;
-		}
-		
-		@Override
-		@Nullable
-		public Entity getOrCreateDisplayEntity(Level level, RandomSource random, BlockPos pos) {
-
-			if (displayEntity == null) {
-
-				Optional<EntityType<?>> type = EntityType.byString(entityData.get(SPAWNER_ENTITY_ID));
-				//sync entity with basespawner on client
-				if(type.isPresent()) {
-					if(level.isClientSide) {
-						this.setEntityId(type.get(), level, random, pos);
-					}
-
-					displayEntity = super.getOrCreateDisplayEntity(level, random, pos);
-				}
-			} else if(displayEntity.getType() != EntityType.byString(entityData.get(SPAWNER_ENTITY_ID)).get()) {
-				this.displayEntity = null;
-				this.setEntityId(EntityType.byString(entityData.get(SPAWNER_ENTITY_ID)).get(), level, random, pos);
-				displayEntity = super.getOrCreateDisplayEntity(level, random, pos);
-			}
-
-			return displayEntity;
-		}
-	};
+	private SpawnerHeadSpawner spawner = new SpawnerHeadSpawner(this);
 	
 	@Override
 	protected void defineSynchedData() {
 		super.defineSynchedData();
 		this.entityData.define(SPAWNER_ENTITY_ID, "");
 		this.entityData.define(BODY_TYPE, 0);
+		this.entityData.define(IS_CHARGED, false);
 	}
 
 	public SpawnerHeadEntity(EntityType<? extends Monster> entity, Level world) {
@@ -135,6 +98,7 @@ public class SpawnerHeadEntity extends Monster {
 		super.readAdditionalSaveData(nbt);
 		this.entityData.set(SPAWNER_ENTITY_ID, nbt.getString("spawner_entity_id"));
 		this.entityData.set(BODY_TYPE, nbt.getInt("type"));
+		this.entityData.set(IS_CHARGED, nbt.getBoolean("is_charged"));
 		this.spawner.load(this.level(), this.blockPosition(), nbt);
 		Optional<EntityType<?>> type = EntityType.byString(this.entityData.get(SPAWNER_ENTITY_ID));
 		if(type.isPresent()) {
@@ -147,6 +111,7 @@ public class SpawnerHeadEntity extends Monster {
 		super.addAdditionalSaveData(nbt);
 		nbt.putString("spawner_entity_id", this.entityData.get(SPAWNER_ENTITY_ID));
 		nbt.putInt("type", this.entityData.get(BODY_TYPE));
+		nbt.putBoolean("is_charged", this.entityData.get(IS_CHARGED));
 		this.spawner.save(nbt);
 	}
 
@@ -256,7 +221,7 @@ public class SpawnerHeadEntity extends Monster {
 		if(SpawnerHeadConfig.allowSpawnEggUse.get()) {
 			ItemStack stack = player.getItemInHand(hand);
 			Item item = stack.getItem();
-			if(item instanceof SpawnEggItem && item != ItemInit.spawnerhead_spawn_egg.get()) {
+			if(item instanceof SpawnEggItem && item != ItemInit.SPAWNER_HEAD_SPAWN_EGG.get()) {
 				//TODO: make configurable blacklist
 				EntityType<?> entity = ((SpawnEggItem)item).getType(null);
 				if(!this.level().isClientSide) {
@@ -266,9 +231,6 @@ public class SpawnerHeadEntity extends Monster {
 				
 				if(!player.isCreative())
 					stack.shrink(1);
-				
-				displayEntity = null;
-				
 
 				return InteractionResult.SUCCESS;
 			}
@@ -316,5 +278,21 @@ public class SpawnerHeadEntity extends Monster {
 	
 	public BlockPos getSpawnerPos() {
 		return this.blockPosition().above();
+	}
+
+	@Override
+	public void thunderHit(ServerLevel serverLevel, LightningBolt lightningBolt) {
+		super.thunderHit(serverLevel, lightningBolt);
+
+		if (SpawnerHeadConfig.canBeChargedByLightning.get()) {
+			this.entityData.set(IS_CHARGED, true);
+			this.spawner.setMinSpawnDelay(SpawnerHeadConfig.chargedMinSpawnDelay.get());
+			this.spawner.setMaxSpawnDelay(SpawnerHeadConfig.chargedMaxSpawnDelay.get());
+		}
+	}
+
+	@Override
+	public boolean isPowered() {
+		return this.entityData.get(IS_CHARGED);
 	}
 }

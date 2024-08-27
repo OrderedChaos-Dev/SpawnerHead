@@ -17,7 +17,10 @@ public class SpawnerHeadConfig {
 	public static ForgeConfigSpec.ConfigValue<Boolean> canBeLeashed;
 	public static ForgeConfigSpec.ConfigValue<Boolean> dropSpecialLoot;
 	public static ForgeConfigSpec.ConfigValue<Boolean> allowSpawnEggUse;
-	public static ConfigValue<List<? extends String>> potentialSpawnerMobs;
+	public static ForgeConfigSpec.ConfigValue<Boolean> canBeChargedByLightning;
+	public static ForgeConfigSpec.ConfigValue<Integer> chargedMinSpawnDelay;
+	public static ForgeConfigSpec.ConfigValue<Integer> chargedMaxSpawnDelay;
+	public static ForgeConfigSpec.ConfigValue<Boolean> chargedSpawnsChargedCreepers;
 	
 	static {
 		COMMON_BUILDER.push("Spawner Head Settings");
@@ -28,6 +31,11 @@ public class SpawnerHeadConfig {
 		canBeLeashed = COMMON_BUILDER.comment("Allow players to use lead items on spawner heads").define("Can Be Leashed", false);
 		dropSpecialLoot = COMMON_BUILDER.comment("Make spawner heads drop dungeon loot on death. Drops zombie loot when set to false.").define("Drop Special Loot", true);
 		allowSpawnEggUse = COMMON_BUILDER.comment("Allow players to use spawn eggs to modify the spawner mob").define("Allow Spawn Egg Use", true);
+		canBeChargedByLightning = COMMON_BUILDER.comment("Allows spawner heads to become charged when struck by lightning").define("Can Be Charged By Lightning", true);
+		chargedMinSpawnDelay = COMMON_BUILDER.comment("Min spawn delay in ticks when charged").define("Charged Min Spawn Delay", 200);
+		chargedMaxSpawnDelay = COMMON_BUILDER.comment("Max spawn delay in ticks when charged").define("Charged Max Spawn Delay", 400);
+		chargedSpawnsChargedCreepers = COMMON_BUILDER.comment("Allows charged spawner heads to spawn charged creepers if spawner is a creeper spawner").define("Charged Spawns Charged Creepers", true);
+
 		COMMON_BUILDER.pop();
 		
 		COMMON_CONFIG = COMMON_BUILDER.build();

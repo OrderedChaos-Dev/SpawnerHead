@@ -2,14 +2,20 @@ package com.spawnerhead.client;
 
 import com.spawnerhead.EntityInit;
 
+import com.spawnerhead.SpawnerHead;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = SpawnerHead.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class EntityRendering {
-	
-	@OnlyIn(Dist.CLIENT)
-	public static void registerRenderers() {
-		EntityRenderers.register(EntityInit.SPAWNER_HEAD.get(), SpawnerHeadRenderer::new);
+
+	@SubscribeEvent
+	public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+		event.registerEntityRenderer(EntityInit.SPAWNER_HEAD.get(), SpawnerHeadRenderer::new);
 	}
+
 }
