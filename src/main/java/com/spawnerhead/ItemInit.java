@@ -1,16 +1,15 @@
 package com.spawnerhead;
 
-import java.util.function.Supplier;
-
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+import java.util.function.Supplier;
 
 @EventBusSubscriber(modid = SpawnerHead.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class ItemInit {

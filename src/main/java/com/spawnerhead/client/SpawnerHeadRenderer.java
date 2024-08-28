@@ -3,6 +3,7 @@ package com.spawnerhead.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.spawnerhead.entity.SpawnerHeadEntity;
+import com.spawnerhead.entity.SpawnerHeadSpawner;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -35,23 +36,28 @@ public class SpawnerHeadRenderer extends HumanoidMobRenderer<SpawnerHeadEntity, 
   public void render(SpawnerHeadEntity entity, float rotation, float delta, PoseStack stack, MultiBufferSource buffer, int light) {
     super.render(entity, rotation, delta, stack, buffer, light);
     stack.pushPose();
-    stack.translate(0.0D, entity.getEyeHeight() - 0.4, 0.0D);
+    if (!entity.isUpsideDown()) {
+      stack.translate(0.0D, entity.getEyeHeight() - 0.4, 0.0D);
+    }
+
     BaseSpawner spawner = entity.getSpawner();
     Entity modelEntity = spawner.getOrCreateDisplayEntity(entity.level(), entity.getRandom(), entity.blockPosition());
 
     if (modelEntity != null) {
-      float f = 0.4F;
-      float f1 = Math.max(modelEntity.getBbWidth(), modelEntity.getBbHeight());
-      if ((double) f1 > 1.0D) {
-        f /= f1;
-      }
+      if (!entity.isDeadOrDying()) {
+        float f = 0.4F;
+        float f1 = Math.max(modelEntity.getBbWidth(), modelEntity.getBbHeight());
+        if ((double) f1 > 1.0D) {
+          f /= f1;
+        }
 
-      stack.translate(0.0D, (double) 0.4F, 0.0D);
-      stack.mulPose(Axis.YP.rotationDegrees((float) Mth.lerp((double) delta, spawner.getoSpin(), spawner.getSpin()) * 10.0F));
-      stack.translate(0.0D, (double) -0.2F, 0.0D);
-      stack.mulPose(Axis.XP.rotationDegrees(-30.0F));
-      stack.scale(f, f, f);
-      Minecraft.getInstance().getEntityRenderDispatcher().render(modelEntity, 0.0D, 0.0D, 0.0D, 0.0F, delta, stack, buffer, 15728880);
+        stack.translate(0.0D, (double) 0.4F, 0.0D);
+        stack.mulPose(Axis.YP.rotationDegrees((float) Mth.lerp((double) delta, spawner.getoSpin(), spawner.getSpin()) * 10.0F));
+        stack.translate(0.0D, (double) -0.2F, 0.0D);
+        stack.mulPose(Axis.XP.rotationDegrees(-30.0F));
+        stack.scale(f, f, f);
+        Minecraft.getInstance().getEntityRenderDispatcher().render(modelEntity, 0.0D, 0.0D, 0.0D, 0.0F, delta, stack, buffer, 15728880);
+      }
     }
 
     stack.popPose();

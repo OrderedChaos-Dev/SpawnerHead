@@ -20,6 +20,7 @@ public class SpawnerHeadConfig {
 	public static ForgeConfigSpec.ConfigValue<Integer> chargedMaxSpawnDelay;
 	public static ForgeConfigSpec.ConfigValue<Boolean> canBeChargedByLightning;
 	public static ForgeConfigSpec.ConfigValue<Boolean> chargedSpawnsChargedCreepers;
+	public static ForgeConfigSpec.ConfigValue<Integer> dropSpawnerChance;
 	
 	static {
 		COMMON_BUILDER.push("Spawner Head Settings");
@@ -36,6 +37,7 @@ public class SpawnerHeadConfig {
 		chargedMinSpawnDelay = COMMON_BUILDER.comment("Min spawn delay in ticks when charged").define("Charged Min Spawn Delay", 200);
 		chargedMaxSpawnDelay = COMMON_BUILDER.comment("Max spawn delay in ticks when charged").define("Charged Max Spawn Delay", 400);
 		chargedSpawnsChargedCreepers = COMMON_BUILDER.comment("Allows charged spawner heads to spawn charged creepers if spawner is a creeper spawner").define("Charged Spawns Charged Creepers", true);
+		dropSpawnerChance = COMMON_BUILDER.comment("Percent chance for a spawner head to drop its spawner on death").defineInRange("Drop Spawner Chance", 25, 0, 100);
 
 		COMMON_BUILDER.pop();
 		

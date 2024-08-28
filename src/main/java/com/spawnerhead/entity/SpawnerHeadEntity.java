@@ -1,6 +1,8 @@
 package com.spawnerhead.entity;
 
+import com.spawnerhead.BlockInit;
 import com.spawnerhead.ItemInit;
+import com.spawnerhead.SpawnerHead;
 import com.spawnerhead.SpawnerHeadConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -26,6 +28,7 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.animal.Turtle;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.monster.AbstractSkeleton;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Monster;
@@ -40,9 +43,11 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.SpawnData;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -54,6 +59,8 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 	public static final EntityDataAccessor<String> SPAWNER_ENTITY_ID = SynchedEntityData.defineId(SpawnerHeadEntity.class, EntityDataSerializers.STRING);
 	public static final EntityDataAccessor<Integer> BODY_TYPE = SynchedEntityData.defineId(SpawnerHeadEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Boolean> IS_CHARGED = SynchedEntityData.defineId(SpawnerHeadEntity.class, EntityDataSerializers.BOOLEAN);
+	public static final EntityDataAccessor<Boolean> REFRESH_DISPLAY_ENTITY = SynchedEntityData.defineId(SpawnerHeadEntity.class, EntityDataSerializers.BOOLEAN);
+	public static final EntityDataAccessor<Boolean> DROP_SPAWNER_ON_DEATH = SynchedEntityData.defineId(SpawnerHeadEntity.class, EntityDataSerializers.BOOLEAN);
 	
 	private SpawnerHeadSpawner spawner = new SpawnerHeadSpawner(this);
 	
@@ -63,6 +70,8 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 		this.entityData.define(SPAWNER_ENTITY_ID, "");
 		this.entityData.define(BODY_TYPE, 0);
 		this.entityData.define(IS_CHARGED, false);
+		this.entityData.define(REFRESH_DISPLAY_ENTITY, false);
+		this.entityData.define(DROP_SPAWNER_ON_DEATH, false);
 	}
 
 	public SpawnerHeadEntity(EntityType<? extends Monster> entity, Level world) {
@@ -99,6 +108,8 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 		this.entityData.set(SPAWNER_ENTITY_ID, nbt.getString("spawner_entity_id"));
 		this.entityData.set(BODY_TYPE, nbt.getInt("type"));
 		this.entityData.set(IS_CHARGED, nbt.getBoolean("is_charged"));
+		this.entityData.set(REFRESH_DISPLAY_ENTITY, nbt.getBoolean("refresh_display_entity"));
+		this.entityData.set(DROP_SPAWNER_ON_DEATH, nbt.getBoolean("drop_spawner_on_death"));
 		this.spawner.load(this.level(), this.blockPosition(), nbt);
 		Optional<EntityType<?>> type = EntityType.byString(this.entityData.get(SPAWNER_ENTITY_ID));
 		if(type.isPresent()) {
@@ -112,6 +123,8 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 		nbt.putString("spawner_entity_id", this.entityData.get(SPAWNER_ENTITY_ID));
 		nbt.putInt("type", this.entityData.get(BODY_TYPE));
 		nbt.putBoolean("is_charged", this.entityData.get(IS_CHARGED));
+		nbt.putBoolean("refresh_display_entity", this.entityData.get(REFRESH_DISPLAY_ENTITY));
+		nbt.putBoolean("drop_spawner_on_death", this.entityData.get(DROP_SPAWNER_ON_DEATH));
 		this.spawner.save(nbt);
 	}
 
@@ -169,7 +182,20 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 		
 		return super.isInvulnerableTo(source);
 	}
-	
+
+	@Override
+	public void die(DamageSource damageSource) {
+		super.die(damageSource);
+		if (this.getEntityData().get(DROP_SPAWNER_ON_DEATH)) {
+			this.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
+			Vec3 eyePos = this.getEyePosition();
+			FallingBlockEntity fallingBlockEntity = FallingBlockEntity.fall(this.level(), new BlockPos((int)eyePos.x, (int)eyePos.y, (int)eyePos.z), BlockInit.FALLING_SPAWNER.get().defaultBlockState());
+			CompoundTag tag = new SpawnData().getEntityToSpawn();
+			tag.putString("id", this.entityData.get(SPAWNER_ENTITY_ID));
+			fallingBlockEntity.blockData = tag;
+		}
+	}
+
 	public void setSpawnerHeadType(int i) {
 		this.entityData.set(BODY_TYPE, i);
 	}
@@ -211,6 +237,8 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 		if(reason == MobSpawnType.SPAWN_EGG) {
 			this.setSpawnerHeadType(random.nextInt(2));
 		}
+		boolean shouldDropSpawnerOnDeath = this.random.nextInt(100) < SpawnerHeadConfig.dropSpawnerChance.get();
+		this.entityData.set(DROP_SPAWNER_ON_DEATH, shouldDropSpawnerOnDeath);
 		
 		return data;
 	}
@@ -285,6 +313,7 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 
 		if (SpawnerHeadConfig.canBeChargedByLightning.get()) {
 			this.entityData.set(IS_CHARGED, true);
+			this.entityData.set(REFRESH_DISPLAY_ENTITY, true);
 			this.spawner.setMinSpawnDelay(SpawnerHeadConfig.chargedMinSpawnDelay.get());
 			this.spawner.setMaxSpawnDelay(SpawnerHeadConfig.chargedMaxSpawnDelay.get());
 		}
@@ -293,5 +322,15 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 	@Override
 	public boolean isPowered() {
 		return this.entityData.get(IS_CHARGED);
+	}
+
+	public boolean isUpsideDown() {
+		if (this.hasCustomName()) {
+			String name = this.getCustomName().getString();
+			if(name.equals("Dinnerbone") || name.equals("Grumm")) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
