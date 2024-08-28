@@ -208,7 +208,6 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 		this.entityData.set(SPAWNER_ENTITY_ID, ForgeRegistries.ENTITY_TYPES.getKey(type).toString());
 		this.spawner.setEntityId(type, world.getLevel(), this.random, this.blockPosition());
 		
-		
 		if(reason == MobSpawnType.SPAWN_EGG) {
 			this.setSpawnerHeadType(random.nextInt(2));
 		}

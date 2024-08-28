@@ -2,6 +2,7 @@ package com.spawnerhead.entity;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +23,7 @@ public class SpawnerHeadSpawns {
 
 	public static SimpleWeightedRandomList.Builder<EntityType<?>> builder = SimpleWeightedRandomList.builder();
 	public static SimpleWeightedRandomList<EntityType<?>> SPAWN_POTENTIALS = null;
+	public static ArrayList<EntityType<?>> SPAWN_ENTITIES = new ArrayList<>();
 	
 	public static final List<SpawnPotentialsData> SPAWN_POTENTIAL_DEFAULTS = List.of(
 										new SpawnPotentialsData("minecraft:zombie", 100),
@@ -62,12 +64,13 @@ public class SpawnerHeadSpawns {
 				SpawnerHead.LOGGER.error("No spawn potentials for spawner heads! Adding zombie to prevent issues.");
 				spawnPotentialMap.put(ForgeRegistries.ENTITY_TYPES.getKey(EntityType.ZOMBIE).toString(), 100);
 			}
-			
+
 			spawnPotentialMap.forEach((a, b) -> {
 				Optional<EntityType<?>> entity = EntityType.byString(a);
 				if(entity.isPresent()) {
 					SpawnerHead.LOGGER.debug("Adding [{} with weight {} to spawner header spawn potentials pool]", a, b);
 					builder.add(entity.get(), b);
+					SPAWN_ENTITIES.add(entity.get());
 				} else {
 					SpawnerHead.LOGGER.warn("Entity type for spawner head not found: {}", a);
 				}
@@ -78,6 +81,5 @@ public class SpawnerHeadSpawns {
 		}
 		
 		SPAWN_POTENTIALS = builder.build();
-
 	}
 }

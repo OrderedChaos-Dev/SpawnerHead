@@ -21,6 +21,9 @@ public class SpawnerHeadSpawner extends BaseSpawner {
     if (entity.getEntityData().get(SpawnerHeadEntity.IS_CHARGED)) {
       this.minSpawnDelay = SpawnerHeadConfig.chargedMinSpawnDelay.get();
       this.maxSpawnDelay = SpawnerHeadConfig.chargedMaxSpawnDelay.get();
+    } else {
+      this.minSpawnDelay = SpawnerHeadConfig.minSpawnDelay.get();
+      this.maxSpawnDelay = SpawnerHeadConfig.maxSpawnDelay.get();
     }
   }
 

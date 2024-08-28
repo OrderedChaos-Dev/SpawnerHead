@@ -1,9 +1,6 @@
 package com.spawnerhead;
 
-import java.util.List;
-
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 
 public class SpawnerHeadConfig {
 	
@@ -17,9 +14,11 @@ public class SpawnerHeadConfig {
 	public static ForgeConfigSpec.ConfigValue<Boolean> canBeLeashed;
 	public static ForgeConfigSpec.ConfigValue<Boolean> dropSpecialLoot;
 	public static ForgeConfigSpec.ConfigValue<Boolean> allowSpawnEggUse;
-	public static ForgeConfigSpec.ConfigValue<Boolean> canBeChargedByLightning;
+	public static ForgeConfigSpec.ConfigValue<Integer> minSpawnDelay;
+	public static ForgeConfigSpec.ConfigValue<Integer> maxSpawnDelay;
 	public static ForgeConfigSpec.ConfigValue<Integer> chargedMinSpawnDelay;
 	public static ForgeConfigSpec.ConfigValue<Integer> chargedMaxSpawnDelay;
+	public static ForgeConfigSpec.ConfigValue<Boolean> canBeChargedByLightning;
 	public static ForgeConfigSpec.ConfigValue<Boolean> chargedSpawnsChargedCreepers;
 	
 	static {
@@ -32,6 +31,8 @@ public class SpawnerHeadConfig {
 		dropSpecialLoot = COMMON_BUILDER.comment("Make spawner heads drop dungeon loot on death. Drops zombie loot when set to false.").define("Drop Special Loot", true);
 		allowSpawnEggUse = COMMON_BUILDER.comment("Allow players to use spawn eggs to modify the spawner mob").define("Allow Spawn Egg Use", true);
 		canBeChargedByLightning = COMMON_BUILDER.comment("Allows spawner heads to become charged when struck by lightning").define("Can Be Charged By Lightning", true);
+		minSpawnDelay = COMMON_BUILDER.comment("Min spawn delay in ticks").define("Min Spawn Delay", 200);
+		maxSpawnDelay = COMMON_BUILDER.comment("Max spawn delay in ticks").define("Max Spawn Delay", 800);
 		chargedMinSpawnDelay = COMMON_BUILDER.comment("Min spawn delay in ticks when charged").define("Charged Min Spawn Delay", 200);
 		chargedMaxSpawnDelay = COMMON_BUILDER.comment("Max spawn delay in ticks when charged").define("Charged Max Spawn Delay", 400);
 		chargedSpawnsChargedCreepers = COMMON_BUILDER.comment("Allows charged spawner heads to spawn charged creepers if spawner is a creeper spawner").define("Charged Spawns Charged Creepers", true);

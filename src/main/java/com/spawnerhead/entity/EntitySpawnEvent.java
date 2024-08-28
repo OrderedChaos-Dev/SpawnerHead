@@ -20,12 +20,13 @@ public class EntitySpawnEvent {
 		if(entity.getType() == EntityType.ZOMBIE || entity.getType() == EntityType.HUSK) {
 			if(event.getResult() != Result.DENY && event.getSpawnType() == MobSpawnType.NATURAL) {
 				int rate = SpawnerHeadConfig.spawnRate.get();
-				if(event.getLevel().getRandom().nextInt(rate) == 0) {
-					SpawnerHeadEntity spawnerHead = EntityInit.SPAWNER_HEAD.get().create(event.getEntity().level());
+				ServerLevelAccessor level = event.getLevel();
+				if(level.getRandom().nextInt(rate) == 0) {
+					SpawnerHeadEntity spawnerHead = EntityInit.SPAWNER_HEAD.get().create(entity.level());
 					spawnerHead.copyPosition(entity);
-					
-					if(event.getLevel() instanceof ServerLevelAccessor)
-						spawnerHead.finalizeSpawn((ServerLevelAccessor) event.getLevel(), event.getLevel().getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.NATURAL, null, null);
+
+					if(event.getLevel() != null)
+						spawnerHead.finalizeSpawn(level, level.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.NATURAL, null, null);
 					
 					if(entity.getType() == EntityType.ZOMBIE)
 						spawnerHead.setSpawnerHeadType(0);
