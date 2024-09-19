@@ -1,11 +1,12 @@
 package com.spawnerhead.entity;
 
 import com.spawnerhead.BlockInit;
+import com.spawnerhead.EntityInit;
 import com.spawnerhead.ItemInit;
-import com.spawnerhead.SpawnerHead;
 import com.spawnerhead.SpawnerHeadConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -29,10 +30,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.animal.Turtle;
 import net.minecraft.world.entity.item.FallingBlockEntity;
-import net.minecraft.world.entity.monster.AbstractSkeleton;
-import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.monster.ZombifiedPiglin;
+import net.minecraft.world.entity.monster.*;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -46,6 +44,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.SpawnData;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -54,6 +53,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class SpawnerHeadEntity extends Monster implements PowerableMob {
 	public static final EntityDataAccessor<String> SPAWNER_ENTITY_ID = SynchedEntityData.defineId(SpawnerHeadEntity.class, EntityDataSerializers.STRING);
@@ -186,13 +186,60 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 	@Override
 	public void die(DamageSource damageSource) {
 		super.die(damageSource);
-		if (this.getEntityData().get(DROP_SPAWNER_ON_DEATH)) {
+		boolean flag = damageSource.getEntity() instanceof Creeper creeper && creeper.isPowered();
+		if (this.getEntityData().get(DROP_SPAWNER_ON_DEATH) || flag) {
 			this.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
-			Vec3 eyePos = this.getEyePosition();
-			FallingBlockEntity fallingBlockEntity = FallingBlockEntity.fall(this.level(), new BlockPos((int)eyePos.x, (int)eyePos.y, (int)eyePos.z), BlockInit.FALLING_SPAWNER.get().defaultBlockState());
-			CompoundTag tag = new SpawnData().getEntityToSpawn();
-			tag.putString("id", this.entityData.get(SPAWNER_ENTITY_ID));
-			fallingBlockEntity.blockData = tag;
+			if (!this.level().isClientSide()) {
+				Vec3 eyePos = this.getEyePosition();
+				BlockPos pos = new BlockPos((int)eyePos.x, (int)eyePos.y, (int)eyePos.z);
+				BlockState state = BlockInit.FALLING_SPAWNER.get().defaultBlockState();
+				FallingBlockEntity fallingblockentity = new FallingBlockEntity(this.level(), (double)pos.getX() + 0.5D, (double)pos.getY() + 0.25D, (double)pos.getZ() + 0.5D, state.hasProperty(BlockStateProperties.WATERLOGGED) ? state.setValue(BlockStateProperties.WATERLOGGED, Boolean.valueOf(false)) : state) {
+					@Override
+					public boolean causeFallDamage(float p_149643_, float p_149644_, DamageSource p_149645_) {
+						Predicate<Entity> predicate = (entity) -> entity.getType() == EntityType.ZOMBIE || entity.getType() == EntityType.HUSK;
+						Optional<Entity> targetEntity = this.level().getEntities(this, this.getBoundingBox(), predicate).stream().findAny();
+						targetEntity.ifPresent((entity) -> {
+							if (entity instanceof Zombie zombie && zombie.isBaby()) {
+								return;
+							}
+
+							SpawnerHeadEntity spawnerHead = EntityInit.SPAWNER_HEAD.get().create(entity.level());
+							spawnerHead.copyPosition(entity);
+							spawnerHead.finalizeSpawn((ServerLevelAccessor) this.level(), this.level().getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.CONVERSION, null, null);
+							if(entity.getType() == EntityType.ZOMBIE)
+								spawnerHead.setSpawnerHeadType(0);
+							else
+								spawnerHead.setSpawnerHeadType(1);
+							spawnerHead.getEntityData().set(SPAWNER_ENTITY_ID, this.blockData.getString("id"));
+							this.blockData.putBoolean("placeBlock", false);
+
+							entity.level().addFreshEntity(spawnerHead);
+							((Zombie)entity).getAllSlots().forEach(this::spawnAtLocation);
+							entity.discard();
+						});
+						return false;
+					}
+				};
+
+				CompoundTag tag = new SpawnData().getEntityToSpawn();
+				tag.putString("id", this.entityData.get(SPAWNER_ENTITY_ID));
+				tag.putBoolean("placeBlock", true);
+				fallingblockentity.blockData = tag;
+
+				double dx = (this.random.nextDouble() - this.random.nextDouble()) * 0.2;
+				double dy = this.random.nextDouble() * 1.1;
+				double dz = (this.random.nextDouble() - this.random.nextDouble()) * 0.2;
+				if(flag) {
+					dx *= 1.2;
+					dy *= 1.5 + 0.3;
+					dz *= 1.2;
+				}
+
+				Vec3 vec31 = new Vec3(dx, dy, dz);
+				fallingblockentity.setDeltaMovement(fallingblockentity.getDeltaMovement().add(vec31));
+
+				this.level().addFreshEntity(fallingblockentity);
+			}
 		}
 	}
 
@@ -255,7 +302,7 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 					this.entityData.set(SPAWNER_ENTITY_ID, ForgeRegistries.ENTITY_TYPES.getKey(entity).toString());
 					this.spawner.setEntityId(entity, this.level(), this.random, this.blockPosition());
 				}
-				
+				this.entityData.set(REFRESH_DISPLAY_ENTITY, true);
 				if(!player.isCreative())
 					stack.shrink(1);
 
@@ -332,5 +379,11 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public void setCustomName(Component component) {
+		super.setCustomName(component);
+		this.entityData.set(REFRESH_DISPLAY_ENTITY, true);
 	}
 }

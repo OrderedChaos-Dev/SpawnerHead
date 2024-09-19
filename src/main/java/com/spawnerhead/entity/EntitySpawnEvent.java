@@ -37,9 +37,9 @@ public class EntitySpawnEvent {
 					event.setResult(Result.DENY);
 				}
 			}
-		} else if (entity instanceof Creeper creeper) {
-			if (event.getResult() != Result.DENY && event.getSpawnType() == MobSpawnType.SPAWNER) {
-				if (event.getSpawner() instanceof SpawnerHeadSpawner spawner && SpawnerHeadConfig.chargedSpawnsChargedCreepers.get()) {
+		} else if (event.getResult() != Result.DENY && event.getSpawnType() == MobSpawnType.SPAWNER) {
+			if (event.getSpawner() instanceof SpawnerHeadSpawner spawner) {
+				if (entity instanceof Creeper creeper && SpawnerHeadConfig.chargedSpawnsChargedCreepers.get()) {
 					if (spawner.isCharged()) {
 						creeper.getEntityData().set(Creeper.DATA_IS_POWERED, true);
 					}
@@ -47,4 +47,5 @@ public class EntitySpawnEvent {
 			}
 		}
 	}
+
 }

@@ -12,6 +12,8 @@ out
 *.iws
 *.iml
 .idea
+tasks.json
+launch.json
 
 # gradle
 build

@@ -13,7 +13,6 @@ import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.BaseSpawner;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -40,7 +39,7 @@ public class SpawnerHeadRenderer extends HumanoidMobRenderer<SpawnerHeadEntity, 
       stack.translate(0.0D, entity.getEyeHeight() - 0.4, 0.0D);
     }
 
-    BaseSpawner spawner = entity.getSpawner();
+    SpawnerHeadSpawner spawner = (SpawnerHeadSpawner) entity.getSpawner();
     Entity modelEntity = spawner.getOrCreateDisplayEntity(entity.level(), entity.getRandom(), entity.blockPosition());
 
     if (modelEntity != null) {

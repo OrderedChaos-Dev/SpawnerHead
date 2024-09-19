@@ -43,17 +43,37 @@ public class FallingSpawnerBlock extends Block implements Fallable {
   public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
     if (isFree(level.getBlockState(pos.below())) && pos.getY() >= level.getMinBuildHeight()) {
       FallingBlockEntity.fall(level, pos, state);
+    } else {
+      level.removeBlock(pos, false);
+    }
+  }
+
+  @Override
+  public void onBrokenAfterFall(Level level, BlockPos pos, FallingBlockEntity entity) {
+    if (isFree(level.getBlockState(pos.below())) && pos.getY() >= level.getMinBuildHeight()) {
+      FallingBlockEntity fallingBlockEntity = FallingBlockEntity.fall(level, pos, this.defaultBlockState());
+      fallingBlockEntity.blockData = entity.blockData.copy();
+    } else {
+      level.setBlock(pos, Blocks.SPAWNER.defaultBlockState(), 2);
+      BlockEntity blockEntity = level.getBlockEntity(pos);
+      if (blockEntity instanceof SpawnerBlockEntity spawnerBlockEntity) {
+        CompoundTag tag = entity.blockData;
+        Optional<EntityType<?>> entityType = EntityType.by(tag);
+        entityType.ifPresent(type -> spawnerBlockEntity.setEntityId(type, level.random));
+      }
     }
   }
 
   @Override
   public void onLand(Level level, BlockPos pos, BlockState fallingBlockState, BlockState landingState, FallingBlockEntity entity) {
-    level.setBlock(pos, Blocks.SPAWNER.defaultBlockState(), 2);
-    BlockEntity blockEntity = level.getBlockEntity(pos);
-    if (blockEntity instanceof SpawnerBlockEntity spawnerBlockEntity) {
-      CompoundTag tag = entity.blockData;
-      Optional<EntityType<?>> entityType = EntityType.by(tag);
-      entityType.ifPresent(type -> spawnerBlockEntity.setEntityId(type, level.random));
+    if (entity.blockData.getBoolean("placeBlock")) {
+      level.setBlock(pos, Blocks.SPAWNER.defaultBlockState(), 2);
+      BlockEntity blockEntity = level.getBlockEntity(pos);
+      if (blockEntity instanceof SpawnerBlockEntity spawnerBlockEntity) {
+        CompoundTag tag = entity.blockData;
+        Optional<EntityType<?>> entityType = EntityType.by(tag);
+        entityType.ifPresent(type -> spawnerBlockEntity.setEntityId(type, level.random));
+      }
     }
   }
 }
