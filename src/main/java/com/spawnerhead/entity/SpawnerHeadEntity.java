@@ -163,20 +163,17 @@ public class SpawnerHeadEntity extends Monster implements PowerableMob {
 	
 	@Override
 	public boolean isInvulnerableTo(DamageSource source) {
+		Entity sourceEntity = source.getEntity();
 		if(SpawnerHeadConfig.immuneToSkeletonArrows.get()) {
 			if (source.is(DamageTypes.ARROW))  {
-				Entity sourceEntity = source.getEntity();
-				if (sourceEntity != null && sourceEntity instanceof AbstractSkeleton) {
+				if (sourceEntity instanceof AbstractSkeleton) {
 					return true;
 				}
 			}
 		}
 		if(SpawnerHeadConfig.immuneToCreeperExplosions.get()) {
-			if (source.is(DamageTypes.EXPLOSION)) {
-				Entity sourceEntity = source.getEntity();
-				if (sourceEntity != null && sourceEntity instanceof Creeper) {
-					return true;
-				}
+			if (sourceEntity instanceof Creeper) {
+				return true;
 			}
 		}
 		

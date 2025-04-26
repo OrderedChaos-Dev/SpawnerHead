@@ -66,14 +66,18 @@ public class FallingSpawnerBlock extends Block implements Fallable {
 
   @Override
   public void onLand(Level level, BlockPos pos, BlockState fallingBlockState, BlockState landingState, FallingBlockEntity entity) {
-    if (entity.blockData.getBoolean("placeBlock")) {
-      level.setBlock(pos, Blocks.SPAWNER.defaultBlockState(), 2);
-      BlockEntity blockEntity = level.getBlockEntity(pos);
-      if (blockEntity instanceof SpawnerBlockEntity spawnerBlockEntity) {
-        CompoundTag tag = entity.blockData;
-        Optional<EntityType<?>> entityType = EntityType.by(tag);
-        entityType.ifPresent(type -> spawnerBlockEntity.setEntityId(type, level.random));
+    CompoundTag blockData = entity.blockData;
+    if (blockData != null) {
+      if (blockData.getBoolean("placeBlock")) {
+        level.setBlock(pos, Blocks.SPAWNER.defaultBlockState(), 2);
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity instanceof SpawnerBlockEntity spawnerBlockEntity) {
+          Optional<EntityType<?>> entityType = EntityType.by(blockData);
+          entityType.ifPresent(type -> spawnerBlockEntity.setEntityId(type, level.random));
+        }
       }
+    } else {
+      level.setBlock(pos, Blocks.SPAWNER.defaultBlockState(), 2);
     }
   }
 }
